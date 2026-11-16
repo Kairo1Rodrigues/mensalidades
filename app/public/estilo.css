@@ -82,7 +82,7 @@ button{cursor:pointer}
 .st-pago{background:var(--ok-soft);color:var(--ok)}
 .st-atrasado{background:var(--bad-soft);color:var(--bad)}
 .st-avencer{background:var(--info-soft);color:var(--info)}
-.st-futuro{background:var(--sunken);color:var(--muted)}
+.st-futuro,.st-sem{background:var(--sunken);color:var(--muted)}
 .st-lendo{background:var(--info-soft);color:var(--info)}
 .st-pendente{background:var(--warn-soft);color:var(--warn)}
 .st-aprovado{background:var(--ok-soft);color:var(--ok)}
@@ -155,6 +155,51 @@ td .sub{font-size:12.5px;color:var(--muted)}
 .overlay{position:fixed;inset:0;background:rgba(8,20,18,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
 .modal{background:var(--surface);color:var(--ink);border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
 .modal.img{max-width:560px;padding:10px}
+.modal.wide{max-width:780px}
+.fin-tot{margin-bottom:6px}
+.fin-tot dd.muted{font-size:12px;margin-top:0}
+.fin-ano{font-size:15px;margin:16px 0 8px}
+.fin-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.fin-cell{border:0;border-radius:10px;padding:8px 6px;display:grid;gap:2px;text-align:center;font:inherit;color:inherit;min-width:0}
+button.fin-cell{cursor:pointer}
+.fin-cell b{font-size:13px;text-transform:capitalize}
+.fin-cell span{font-size:12.5px;font-weight:600}
+.fin-cell small{font-size:11px;opacity:.85}
+@media (max-width:560px){.fin-grid{grid-template-columns:repeat(3,1fr)}}
+/* aba financeiro */
+.fin-rotina{margin-bottom:16px}
+.rotina{display:grid;grid-template-columns:minmax(200px,.8fr) 2fr;gap:16px 24px;align-items:start}
+.rotina h2{margin-bottom:4px}
+.passos{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;counter-reset:p}
+.passos li{background:var(--sunken);border-radius:12px;padding:12px;display:grid;gap:6px;align-content:start;position:relative;min-width:0}
+.passos li::before{counter-increment:p;content:counter(p);position:absolute;top:10px;right:12px;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.passos b{font-family:var(--f-display);font-size:15px}
+.passos span{font-size:12.5px}
+.passos .btn{justify-self:start;margin-top:2px}
+@media (max-width:900px){.rotina{grid-template-columns:1fr}}
+@media (max-width:620px){.passos{grid-template-columns:1fr}}
+.seg{display:inline-flex;gap:2px;padding:3px;background:var(--sunken);border:1px solid var(--line);border-radius:11px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;padding:6px 12px;border-radius:8px;font-weight:600;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.search.sel{width:auto;padding-right:28px}
+.fin-kpis{grid-template-columns:1.5fr repeat(3,1fr);margin:0 0 16px}
+.fin-tab{min-width:900px}
+.fin-tab td{vertical-align:top}
+.fin-tab tfoot td{background:var(--sunken);border-top:1px solid var(--line);border-bottom:0}
+.fin-tab tr.atual td{background:color-mix(in srgb,var(--info-soft) 45%,transparent)}
+.fin-tab .acts{flex-wrap:wrap}
+.linkbtn{border:0;background:none;padding:0;text-align:left;color:inherit;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.linkbtn:hover{text-decoration-color:currentColor}
+.btn.zap{color:#128c4b;border-color:color-mix(in srgb,#25d366 45%,var(--line));text-decoration:none}
+.btn.zap:hover{background:color-mix(in srgb,#25d366 12%,var(--surface))}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.zap{color:#5fe39a}}
+:root[data-theme="dark"] .btn.zap{color:#5fe39a}
+.bar.mini{margin-top:4px;height:10px}
+.leg{display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--c);margin:0 4px 0 10px;vertical-align:-1px}
+.fin-mes{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+.timeline{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:start;background:var(--sunken);border-radius:10px;padding:8px 10px}
+.timeline small{font-size:12px}
 .modal h3{font-size:20px;margin-bottom:12px}
 .form{display:grid;gap:12px}
 .form label{display:grid;gap:4px;font-size:13px;font-weight:600}

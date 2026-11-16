@@ -59,6 +59,16 @@ export function criarEvolution({ url, apiKey, instancia, webhookUrl }) {
       return { base64: r?.base64, mime: r?.mimetype };
     },
 
+    /** Mensagens guardadas pela Evolution num período (mais novas primeiro), uma página por vez. */
+    async buscarMensagens({ desde, ate, pagina = 1, porPagina = 100 }) {
+      const r = await chamar('POST', `/chat/findMessages/${instancia}`, {
+        where: { messageTimestamp: { gte: desde.toISOString(), lte: ate.toISOString() } }, page: pagina, offset: porPagina,
+      });
+      const m = r?.messages ?? r;
+      const registros = Array.isArray(m) ? m : (m?.records || []);
+      return { registros, paginas: Number(m?.pages) || 1 };
+    },
+
     async enviarTexto(numero, texto) {
       return chamar('POST', `/message/sendText/${instancia}`, { number: numero, text: texto });
     },

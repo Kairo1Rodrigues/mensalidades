@@ -53,14 +53,38 @@ export function abrirBanco(dir) {
       UNIQUE (aluno_id, competencia)
     );
     CREATE TABLE IF NOT EXISTS sessoes (token TEXT PRIMARY KEY, expira INTEGER NOT NULL);
+    -- mensalidades provisionadas: um título por aluno por mês, com o valor da época
+    CREATE TABLE IF NOT EXISTS mensalidades (
+      id INTEGER PRIMARY KEY,
+      aluno_id INTEGER NOT NULL REFERENCES alunos(id) ON DELETE CASCADE,
+      competencia TEXT NOT NULL,         -- AAAA-MM
+      valor REAL NOT NULL,
+      UNIQUE (aluno_id, competencia)
+    );
+    -- histórico de relacionamento (CRM): cobranças, conversas e anotações por aluno
+    CREATE TABLE IF NOT EXISTS contatos (
+      id INTEGER PRIMARY KEY,
+      aluno_id INTEGER NOT NULL REFERENCES alunos(id) ON DELETE CASCADE,
+      quando INTEGER NOT NULL,
+      tipo TEXT NOT NULL,                -- cobranca | whatsapp | nota
+      texto TEXT NOT NULL DEFAULT '',
+      promessa TEXT                      -- AAAA-MM-DD: responsável prometeu pagar até
+    );
+    CREATE INDEX IF NOT EXISTS contatos_aluno ON contatos(aluno_id, quando);
   `);
+  // bancos criados antes desta versão: mês a partir do qual o aluno é cobrado
+  const colunas = db.prepare('PRAGMA table_info(alunos)').all().map(c => c.name);
+  if (!colunas.includes('inicio_cobranca')) db.exec(`ALTER TABLE alunos ADD COLUMN inicio_cobranca TEXT NOT NULL DEFAULT ''`);
   return db;
 }
 
 export const PADRAO = {
   escola: 'Nossa escola',
   vencimento: '10',
-  mes_inicial: '',            // AAAA-MM; vazio = mês da instalação
+  mes_inicial: '',            // não usado mais (substituído por provisao_inicio)
+  provisao_inicio: '2026-01', // primeiro mês com mensalidade gerada (AAAA-MM)
+  provisao_fim: '2027-12',    // último mês com mensalidade gerada (AAAA-MM)
+  ultima_varredura: '',       // JSON { em, dias, encontradas, novas, erros } da última busca de comprovantes
   resposta_recebido: '1',
   texto_recebido: 'Recebemos seu comprovante! Vamos conferir e em breve confirmamos por aqui. Obrigado!',
   resposta_confirmado: '1',

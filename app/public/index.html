@@ -29,6 +29,7 @@
   <div class="tabs" role="tablist">
     <button role="tab" aria-selected="true" data-tab="comprovantes">Comprovantes <span class="count" id="cntComp">0</span></button>
     <button role="tab" aria-selected="false" data-tab="alunos">Alunos <span class="count" id="cntAlunos">0</span></button>
+    <button role="tab" aria-selected="false" data-tab="financeiro">Financeiro <span class="count" id="cntFin">0</span></button>
     <button role="tab" aria-selected="false" data-tab="whatsapp">WhatsApp</button>
     <button role="tab" aria-selected="false" data-tab="ajustes">Ajustes</button>
   </div>
@@ -68,6 +69,23 @@
     <p class="hint" style="margin-top:10px">Toque num mês para dar baixa ou ver o pagamento. <a href="/api/planilha.csv" id="planilha">Baixar planilha (Excel)</a></p>
   </section>
 
+  <section class="panel" id="p-financeiro" hidden>
+    <div class="fin-rotina" id="finRotina"></div>
+    <div class="toolbar">
+      <div class="seg" id="finVisao" role="group" aria-label="Visão">
+        <button aria-pressed="true" data-v="pessoas">Por pessoa</button>
+        <button aria-pressed="false" data-v="meses">Por mês</button>
+        <button aria-pressed="false" data-v="turmas">Por turma</button>
+      </div>
+      <div class="grp">
+        <select class="search sel" id="finPeriodo" aria-label="Período"></select>
+        <select class="search sel" id="finTurma" aria-label="Turma"></select>
+      </div>
+    </div>
+    <div class="kpis fin-kpis" id="finKpis"></div>
+    <div id="finCorpo"></div>
+  </section>
+
   <section class="panel" id="p-whatsapp" hidden>
     <div class="grid2">
       <div class="card" id="waCard"><h2>Conexão</h2><p class="muted">Verificando…</p></div>
@@ -91,7 +109,11 @@
         <label>Nome da escola<input id="cfgEscola" name="escola"></label>
         <label>Dia do vencimento<input id="cfgVenc" name="vencimento" type="number" min="1" max="28"></label>
       </div>
-      <label>Primeiro mês controlado<input id="cfgInicio" name="mes_inicial" type="month"><span class="hint">Meses antes deste não aparecem nem contam como atraso.</span></label>
+      <div class="row">
+        <label>Mensalidades a partir de<input id="cfgInicio" name="provisao_inicio" type="month" required></label>
+        <label>até<input id="cfgFim" name="provisao_fim" type="month" required></label>
+      </div>
+      <span class="hint">Cada aluno ativo recebe uma mensalidade por mês nesse período, com o valor do cadastro. Mensalidades já pagas nunca são apagadas.</span>
       <label class="check"><input type="checkbox" id="cfgRespRec" name="resposta_recebido"> Responder automaticamente quando chegar um comprovante</label>
       <label>Mensagem de recebido<textarea id="cfgTxtRec" name="texto_recebido" style="min-height:70px"></textarea></label>
       <label class="check"><input type="checkbox" id="cfgRespConf" name="resposta_confirmado"> Avisar o responsável quando a baixa for confirmada</label>

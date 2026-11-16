@@ -21,6 +21,25 @@ WhatsApp do celular da escola ──(aparelho conectado)──► Computador da 
 
 ---
 
+## Jeito mais rápido: um comando no PowerShell
+
+1. No computador da escola, clique no **menu Iniciar**, digite `powershell` e abra o **Windows PowerShell**. Não precisa ser como administrador.
+2. Copie a linha abaixo, cole na janela azul (botão direito do mouse cola) e aperte **Enter**:
+
+   ```powershell
+   irm https://raw.githubusercontent.com/Kairo1Rodrigues/mensalidades/main/scripts/windows/instalar-rapido.ps1 | iex
+   ```
+
+3. **Se o Docker ainda não estiver instalado**, o comando instala o Docker e pede para **reiniciar o computador**. Depois de reiniciar:
+   - o Docker Desktop abre sozinho: clique em **Accept** e, se pedir conta, em **Skip**;
+   - abra o PowerShell de novo e cole **o mesmo comando**.
+4. Crie a **senha do painel** quando pedir (as letras não aparecem enquanto você digita, é normal) e clique em **Sim** quando o Windows pedir permissão.
+5. No fim aparece **"Pronto!"** com o endereço do painel neste computador e nos celulares.
+
+O sistema fica em `C:\mensalidades`. **Para atualizar** no futuro, cole o mesmo comando: os dados e a senha são mantidos.
+
+Se preferir fazer clicando, siga as partes 1 a 3 abaixo.
+
 ## Parte 1: instalar o Docker Desktop (uma vez só)
 
 O Docker é o programa que roda o sistema. É gratuito para escolas e organizações pequenas.

@@ -6,7 +6,11 @@ Custo: **zero**. Roda num computador da escola, com OCR gratuito (Tesseract) e a
 
 ## Instalar
 
-- **Computador da escola (Windows), sem cartão:** siga [docs/INSTALACAO-ESCOLA.md](docs/INSTALACAO-ESCOLA.md). A instalação é com dois cliques no `INSTALAR.bat`.
+- **Computador da escola (Windows), sem cartão:** no PowerShell, cole o comando abaixo e siga as instruções. Detalhes em [docs/INSTALACAO-ESCOLA.md](docs/INSTALACAO-ESCOLA.md).
+
+  ```powershell
+  irm https://raw.githubusercontent.com/Kairo1Rodrigues/mensalidades/main/scripts/windows/instalar-rapido.ps1 | iex
+  ```
 - **Servidor na internet (Oracle Cloud):** siga [docs/INSTALACAO-INTERNET.md](docs/INSTALACAO-INTERNET.md).
 - **Computador Linux:** rode `./scripts/instalar.sh`.
 
