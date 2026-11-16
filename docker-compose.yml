@@ -1,6 +1,13 @@
 # Mensalidades em Dia: tudo o que roda no servidor.
 # Subir:   docker compose up -d --build
 # Logs:    docker compose logs -f app
+#
+# Dois modos (definidos no .env pelos instaladores):
+# - computador da escola: PORTA_PAINEL=80, painel em http://IP-DO-COMPUTADOR na rede da escola
+# - servidor na internet: COMPOSE_PROFILES=internet, painel em https://DOMINIO (Caddy)
+# nome fixo: os dados continuam os mesmos mesmo se a pasta for renomeada
+name: mensalidades
+
 services:
   app:
     build: ./app
@@ -13,6 +20,9 @@ services:
       EVOLUTION_INSTANCIA: escola
       APP_URL_INTERNA: http://app:3000
       COOKIE_SECURE: ${COOKIE_SECURE:-1}
+    ports:
+      # no modo internet fica só para a própria máquina; no computador da escola, PORTA_PAINEL=80
+      - "${PORTA_PAINEL:-127.0.0.1:8080}:3000"
     volumes:
       - dados:/dados
     depends_on: [evolution]
@@ -59,10 +69,11 @@ services:
   caddy:
     # HTTPS automático (Let's Encrypt) para o endereço do painel
     image: caddy:2-alpine
+    profiles: ["internet"]
     restart: unless-stopped
     ports: ["80:80", "443:443"]
     environment:
-      DOMINIO: ${DOMINIO:?defina DOMINIO no .env}
+      DOMINIO: ${DOMINIO:-localhost}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy:/data

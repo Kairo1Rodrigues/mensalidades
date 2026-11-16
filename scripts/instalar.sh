@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Instala o Mensalidades em Dia num servidor Ubuntu (feito para a Oracle Cloud Free).
+# Instala o Mensalidades em Dia num Linux (Ubuntu/Debian).
+# Serve para um computador da escola (rede local) ou para um servidor na internet.
 # Uso: ./scripts/instalar.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -17,8 +18,8 @@ fi
 sudo usermod -aG docker "$USER" || true
 DOCKER="sudo docker"
 
-# 2. Firewall interno: as imagens Ubuntu da Oracle bloqueiam as portas 80 e 443 por padrão
-verde "Liberando as portas 80 e 443 no firewall do servidor…"
+# 2. Firewall: libera as portas do painel (as imagens Ubuntu da Oracle bloqueiam 80 e 443 por padrão)
+verde "Liberando as portas 80 e 443 no firewall…"
 for porta in 80 443; do
   sudo iptables -C INPUT -p tcp --dport "$porta" -m state --state NEW -j ACCEPT 2>/dev/null \
     || sudo iptables -I INPUT -p tcp --dport "$porta" -m state --state NEW -j ACCEPT
@@ -36,21 +37,34 @@ fi
 # 4. Configuração (.env)
 if [ ! -f .env ]; then
   echo
-  read -rp "Endereço do painel (ex.: minhaescola.duckdns.org): " DOMINIO
+  echo "Onde este sistema vai rodar?"
+  echo "  1) Num computador da escola (acesso pela rede Wi-Fi da escola)"
+  echo "  2) Num servidor na internet, com endereço próprio (ex.: Oracle Cloud + DuckDNS)"
+  read -rp "Escolha 1 ou 2: " MODO
+  DOMINIO=""; DUCK=""
+  if [ "$MODO" = "2" ]; then
+    read -rp "Endereço do painel (ex.: minhaescola.duckdns.org): " DOMINIO
+    read -rp "Token do DuckDNS (opcional, mantém o endereço atualizado; Enter para pular): " DUCK
+  fi
   while true; do
-    read -rsp "Crie a senha do painel (mínimo 8 caracteres): " SENHA; echo
-    [ "${#SENHA}" -ge 8 ] && break
-    amarelo "A senha precisa ter pelo menos 8 caracteres."
+    read -rsp "Crie a senha do painel (mínimo 8 caracteres, sem aspas simples): " SENHA; echo
+    if [ "${#SENHA}" -ge 8 ] && [[ "$SENHA" != *"'"* ]]; then break; fi
+    amarelo "A senha precisa ter pelo menos 8 caracteres e não pode ter aspas simples (')."
   done
-  read -rp "Token do DuckDNS (opcional, mantém o endereço atualizado; Enter para pular): " DUCK
   umask 077
-  cat > .env <<EOF
-DOMINIO=${DOMINIO}
-SENHA_PAINEL=${SENHA}
-WEBHOOK_SECRET=$(openssl rand -hex 24)
-EVOLUTION_API_KEY=$(openssl rand -hex 24)
-POSTGRES_SENHA=$(openssl rand -hex 16)
-EOF
+  {
+    echo "SENHA_PAINEL='${SENHA}'"
+    echo "WEBHOOK_SECRET=$(openssl rand -hex 24)"
+    echo "EVOLUTION_API_KEY=$(openssl rand -hex 24)"
+    echo "POSTGRES_SENHA=$(openssl rand -hex 16)"
+    if [ "$MODO" = "2" ]; then
+      echo "DOMINIO=${DOMINIO}"
+      echo "COMPOSE_PROFILES=internet"
+    else
+      echo "PORTA_PAINEL=80"
+      echo "COOKIE_SECURE=0"
+    fi
+  } > .env
   if [ -n "${DUCK}" ]; then
     SUB="${DOMINIO%%.duckdns.org}"
     LINHA="*/5 * * * * curl -fsS 'https://www.duckdns.org/update?domains=${SUB}&token=${DUCK}&ip=' >/dev/null 2>&1"
@@ -60,7 +74,7 @@ EOF
 else
   amarelo "Arquivo .env já existe: mantendo a configuração atual."
 fi
-DOMINIO=$(grep '^DOMINIO=' .env | cut -d= -f2)
+DOMINIO=$(grep '^DOMINIO=' .env | cut -d= -f2 || true)
 
 # 5. Sobe tudo
 verde "Construindo e iniciando os serviços (a primeira vez demora uns 5 minutos)…"
@@ -68,6 +82,20 @@ $DOCKER compose up -d --build
 
 # 6. Espera o painel responder
 verde "Aguardando o painel ficar no ar…"
+if [ -z "$DOMINIO" ]; then
+  for _ in $(seq 1 60); do
+    if curl -fsS -o /dev/null http://127.0.0.1/entrar 2>/dev/null; then
+      IP=$(hostname -I | awk '{print $1}')
+      echo; verde "Pronto! Neste computador: http://localhost"
+      verde "Nos celulares e outros computadores da escola: http://${IP}"
+      echo "Depois de entrar: aba Ajustes (nome da escola), aba Alunos (Importar lista) e aba WhatsApp (QR Code)."
+      exit 0
+    fi
+    sleep 5
+  done
+  amarelo "Os serviços subiram, mas o painel ainda não respondeu. Veja: sudo docker compose logs app"
+  exit 1
+fi
 for _ in $(seq 1 60); do
   if curl -fsS -o /dev/null "https://${DOMINIO}/entrar" 2>/dev/null; then
     echo; verde "Pronto! Acesse: https://${DOMINIO}"
@@ -77,5 +105,5 @@ for _ in $(seq 1 60); do
   sleep 5
 done
 amarelo "Os serviços subiram, mas o endereço https://${DOMINIO} ainda não respondeu."
-amarelo "Confira se o DuckDNS aponta para o IP desta máquina e se as portas 80 e 443 estão liberadas na Oracle (guia, parte 3)."
+amarelo "Confira se o DuckDNS aponta para o IP desta máquina e se as portas 80 e 443 estão liberadas."
 amarelo "Logs: sudo docker compose logs caddy"

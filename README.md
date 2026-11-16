@@ -2,9 +2,13 @@
 
 Controle de mensalidades para escolas pequenas. Os comprovantes Pix que os responsáveis mandam no WhatsApp da escola chegam sozinhos no painel, o sistema lê o comprovante e sugere o aluno e o mês, e a secretaria confirma a baixa com um toque.
 
-Custo de software e hospedagem: **zero**. Roda na Oracle Cloud (camada gratuita), com OCR gratuito (Tesseract) e a Evolution API (código aberto) para o WhatsApp.
+Custo: **zero**. Roda num computador da escola, com OCR gratuito (Tesseract) e a Evolution API (código aberto) para o WhatsApp.
 
-**Para instalar, siga [docs/INSTALACAO.md](docs/INSTALACAO.md).**
+## Instalar
+
+- **Computador da escola (Windows), sem cartão:** siga [docs/INSTALACAO-ESCOLA.md](docs/INSTALACAO-ESCOLA.md). A instalação é com dois cliques no `INSTALAR.bat`.
+- **Servidor na internet (Oracle Cloud):** siga [docs/INSTALACAO-INTERNET.md](docs/INSTALACAO-INTERNET.md).
+- **Computador Linux:** rode `./scripts/instalar.sh`.
 
 ## O que tem aqui
 
@@ -15,7 +19,8 @@ Custo de software e hospedagem: **zero**. Roda na Oracle Cloud (camada gratuita)
 | `app/src/match.js` | Sugere o aluno pelo telefone de quem mandou, pelo nome do pagador e pelo valor |
 | `app/src/evolution.js` | Ligação com a Evolution API (WhatsApp) |
 | `docker-compose.yml` | Sobe o sistema, a Evolution API, o banco dela e o HTTPS (Caddy) |
-| `scripts/` | Instalar, atualizar e fazer backup |
+| `INSTALAR.bat`, `ATUALIZAR.bat`, `BACKUP.bat` | Instalação e manutenção no Windows, com dois cliques (`scripts/windows/`) |
+| `scripts/` | Instalar, atualizar e fazer backup no Linux |
 | `prototipo/` | O protótipo da apresentação (página única, dados fictícios) |
 
 ## Desenvolvimento

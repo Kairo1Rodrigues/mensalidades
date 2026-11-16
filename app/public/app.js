@@ -346,7 +346,7 @@ async function verWhatsapp() {
   if (st === 'open') { card.innerHTML = `<h2>Conexão</h2><p><span class="pill st-pago">Conectado</span></p><p class="muted">Os comprovantes que chegarem no WhatsApp da escola aparecem na aba Comprovantes.</p><div class="modal-actions" style="justify-content:flex-start"><button class="btn danger" id="waSair">Desconectar</button></div>`;
     card.querySelector('#waSair').addEventListener('click', async e => { const b = e.target; if (b.dataset.conf !== '1') { b.dataset.conf = '1'; b.textContent = 'Toque de novo para desconectar'; return; } await api('POST', '/api/whatsapp/desconectar').catch(err => toast(err.message)); verWhatsapp(); });
     return; }
-  if (st === 'nao-configurado' || st === 'fora-do-ar') { card.innerHTML = `<h2>Conexão</h2><p class="warn bad">${st === 'nao-configurado' ? 'A Evolution API não está configurada no servidor (.env).' : 'O serviço do WhatsApp (Evolution API) não respondeu. Veja o guia de instalação, seção "Problemas comuns".'}</p>`; return; }
+  if (st === 'nao-configurado' || st === 'fora-do-ar') { card.innerHTML = `<h2>Conexão</h2><p class="warn bad">${st === 'nao-configurado' ? 'A Evolution API não está configurada no servidor (.env).' : 'O serviço do WhatsApp ainda não respondeu. Se o computador acabou de ligar, espere 1 ou 2 minutos e abra esta aba de novo. Se continuar, veja "Problemas comuns" no guia.'}</p>`; return; }
   card.innerHTML = `<h2>Conexão</h2><p class="muted">O WhatsApp da escola ainda não está ligado ao sistema.</p><div class="modal-actions" style="justify-content:flex-start"><button class="btn primary" id="waQr">Gerar QR Code</button></div><div id="qrBox"></div>`;
   card.querySelector('#waQr').addEventListener('click', gerarQr);
 }

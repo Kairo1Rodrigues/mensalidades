@@ -1,4 +1,6 @@
-# Guia de instalação na Oracle Cloud (gratuito)
+# Guia de instalação num servidor na internet (Oracle Cloud)
+
+> Este caminho exige **cartão de crédito** no cadastro da Oracle. Para instalar num computador da escola, sem cartão, use o [guia do computador da escola](INSTALACAO-ESCOLA.md).
 
 Tempo estimado: **1 hora**, na primeira vez. Você vai precisar de:
 
@@ -93,9 +95,10 @@ cd mensalidades && ./scripts/instalar.sh
 
 O script vai perguntar:
 
-1. **Endereço do painel**: o do DuckDNS (ex.: `teologiasaojoao.duckdns.org`);
-2. **Senha do painel**: a senha que a secretaria vai usar para entrar (mínimo 8 caracteres);
-3. **Token do DuckDNS**: cole o token da Parte 4.
+1. **Onde vai rodar**: escolha `2` (servidor na internet);
+2. **Endereço do painel**: o do DuckDNS (ex.: `teologiasaojoao.duckdns.org`);
+3. **Token do DuckDNS**: cole o token da Parte 4;
+4. **Senha do painel**: a senha que a secretaria vai usar para entrar (mínimo 8 caracteres).
 
 Na primeira vez ele leva uns 5 minutos. No fim, aparece **"Pronto! Acesse: https://…"**.
 
