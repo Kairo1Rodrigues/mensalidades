@@ -1,0 +1,7 @@
+{$DOMINIO} {
+	encode gzip
+	# os avisos da Evolution API chegam por dentro do servidor; de fora, bloqueados
+	@webhook path /webhook/*
+	respond @webhook 404
+	reverse_proxy app:3000
+}

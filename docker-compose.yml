@@ -1,0 +1,75 @@
+# Mensalidades em Dia: tudo o que roda no servidor.
+# Subir:   docker compose up -d --build
+# Logs:    docker compose logs -f app
+services:
+  app:
+    build: ./app
+    restart: unless-stopped
+    environment:
+      SENHA_PAINEL: ${SENHA_PAINEL:?defina SENHA_PAINEL no .env}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?defina WEBHOOK_SECRET no .env}
+      EVOLUTION_URL: http://evolution:8080
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:?defina EVOLUTION_API_KEY no .env}
+      EVOLUTION_INSTANCIA: escola
+      APP_URL_INTERNA: http://app:3000
+      COOKIE_SECURE: ${COOKIE_SECURE:-1}
+    volumes:
+      - dados:/dados
+    depends_on: [evolution]
+    mem_limit: 512m
+
+  evolution:
+    image: evoapicloud/evolution-api:v2.3.7
+    restart: unless-stopped
+    environment:
+      SERVER_URL: http://evolution:8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY}
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${POSTGRES_SENHA:?defina POSTGRES_SENHA no .env}@postgres:5432/evolution?schema=public
+      DATABASE_CONNECTION_CLIENT_NAME: evolution
+      DATABASE_SAVE_DATA_INSTANCE: "true"
+      DATABASE_SAVE_DATA_NEW_MESSAGE: "false"
+      DATABASE_SAVE_MESSAGE_UPDATE: "false"
+      DATABASE_SAVE_DATA_CONTACTS: "false"
+      DATABASE_SAVE_DATA_CHATS: "false"
+      DATABASE_SAVE_DATA_LABELS: "false"
+      DATABASE_SAVE_DATA_HISTORIC: "false"
+      CACHE_REDIS_ENABLED: "false"
+      CACHE_LOCAL_ENABLED: "true"
+      CONFIG_SESSION_PHONE_CLIENT: Mensalidades em Dia
+      CONFIG_SESSION_PHONE_NAME: Chrome
+      DEL_INSTANCE: "false"
+      LOG_LEVEL: ERROR,WARN
+      TZ: America/Sao_Paulo
+    volumes:
+      - evolution:/evolution/instances
+    depends_on: [postgres]
+    # sem "ports": a Evolution API só é acessível de dentro do servidor
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${POSTGRES_SENHA}
+      POSTGRES_DB: evolution
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  caddy:
+    # HTTPS automático (Let's Encrypt) para o endereço do painel
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMINIO: ${DOMINIO:?defina DOMINIO no .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy:/data
+    depends_on: [app]
+
+volumes:
+  dados:
+  evolution:
+  postgres:
+  caddy:

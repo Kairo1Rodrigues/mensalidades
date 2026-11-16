@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d7360">
+<title>Mensalidades em Dia</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icone.svg">
+<link rel="stylesheet" href="/estilo.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Mensalidades em Dia</h1>
+      <p id="escolaNome">Carregando…</p>
+    </div>
+    <div class="top-actions">
+      <span class="wa-dot" id="waDot">WhatsApp…</span>
+      <nav class="months" id="months" aria-label="Mês de referência"></nav>
+    </div>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" aria-selected="true" data-tab="comprovantes">Comprovantes <span class="count" id="cntComp">0</span></button>
+    <button role="tab" aria-selected="false" data-tab="alunos">Alunos <span class="count" id="cntAlunos">0</span></button>
+    <button role="tab" aria-selected="false" data-tab="whatsapp">WhatsApp</button>
+    <button role="tab" aria-selected="false" data-tab="ajustes">Ajustes</button>
+  </div>
+
+  <section class="panel" id="p-comprovantes">
+    <div class="toolbar">
+      <div class="chips" id="compFilter">
+        <button class="chip" aria-pressed="true" data-f="conferir">A conferir</button>
+        <button class="chip" aria-pressed="false" data-f="todos">Todos</button>
+      </div>
+      <div class="grp">
+        <label class="btn" for="upload">Enviar comprovante</label>
+        <input type="file" id="upload" accept="image/*,application/pdf" hidden>
+      </div>
+    </div>
+    <div class="comps" id="comps"><div class="empty">Carregando…</div></div>
+  </section>
+
+  <section class="panel" id="p-alunos" hidden>
+    <div class="toolbar">
+      <div class="chips" id="alFilter">
+        <button class="chip" aria-pressed="true" data-f="todos">Todos</button>
+        <button class="chip" aria-pressed="false" data-f="pago">Pagos no mês</button>
+        <button class="chip" aria-pressed="false" data-f="aberto">Em aberto no mês</button>
+        <button class="chip" aria-pressed="false" data-f="devendo">Com atraso</button>
+      </div>
+      <div class="grp">
+        <input class="search" id="busca" type="search" placeholder="Buscar aluno ou responsável" aria-label="Buscar aluno ou responsável">
+        <button class="btn" id="importar">Importar lista</button>
+        <button class="btn primary" id="novoAluno">Novo aluno</button>
+      </div>
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Aluno</th><th>Turma</th><th class="right">Mensalidade</th><th>Meses</th><th class="right">Em atraso</th><th class="right">Ações</th></tr></thead>
+      <tbody id="alunos"><tr><td colspan="6" class="muted">Carregando…</td></tr></tbody>
+    </table></div>
+    <p class="hint" style="margin-top:10px">Toque num mês para dar baixa ou ver o pagamento. <a href="/api/planilha.csv" id="planilha">Baixar planilha (Excel)</a></p>
+  </section>
+
+  <section class="panel" id="p-whatsapp" hidden>
+    <div class="grid2">
+      <div class="card" id="waCard"><h2>Conexão</h2><p class="muted">Verificando…</p></div>
+      <div class="card">
+        <h2>Como conectar</h2>
+        <ol style="margin:0;padding-left:20px;display:grid;gap:8px">
+          <li>Toque em <b>Gerar QR Code</b>.</li>
+          <li>No celular da escola, abra o WhatsApp e vá em <b>Configurações › Aparelhos conectados › Conectar um aparelho</b>.</li>
+          <li>Aponte a câmera para o QR Code desta tela.</li>
+          <li>Pronto: os comprovantes que chegarem passam a aparecer aqui sozinhos. O WhatsApp do celular continua funcionando normal.</li>
+        </ol>
+        <p class="hint" style="margin-top:12px">Para não correr risco de bloqueio, o sistema só responde a quem mandou mensagem. Cobranças são enviadas uma a uma, por você.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-ajustes" hidden>
+    <form class="card form" id="fAjustes" style="max-width:720px">
+      <h2>Ajustes</h2>
+      <div class="row">
+        <label>Nome da escola<input id="cfgEscola" name="escola"></label>
+        <label>Dia do vencimento<input id="cfgVenc" name="vencimento" type="number" min="1" max="28"></label>
+      </div>
+      <label>Primeiro mês controlado<input id="cfgInicio" name="mes_inicial" type="month"><span class="hint">Meses antes deste não aparecem nem contam como atraso.</span></label>
+      <label class="check"><input type="checkbox" id="cfgRespRec" name="resposta_recebido"> Responder automaticamente quando chegar um comprovante</label>
+      <label>Mensagem de recebido<textarea id="cfgTxtRec" name="texto_recebido" style="min-height:70px"></textarea></label>
+      <label class="check"><input type="checkbox" id="cfgRespConf" name="resposta_confirmado"> Avisar o responsável quando a baixa for confirmada</label>
+      <label>Mensagem de confirmação<textarea id="cfgTxtConf" name="texto_confirmado" style="min-height:70px"></textarea><span class="hint">Use {aluno} e {meses}.</span></label>
+      <label>Mensagem de cobrança<textarea id="cfgTxtCob" name="texto_cobranca"></textarea><span class="hint">Use {responsavel}, {aluno}, {meses}, {total} e {escola}.</span></label>
+      <div class="modal-actions" style="justify-content:space-between"><button type="button" class="btn" id="sair">Sair deste aparelho</button><button class="btn primary">Salvar ajustes</button></div>
+    </form>
+  </section>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="modalRoot"></div>
+<script src="/app.js" type="module"></script>
+</body>
+</html>

@@ -1,0 +1,664 @@
+<title>Mensalidades em Dia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: caderno de cobrança. Barra do mês no topo, resumo da competência, abas Comprovantes / Alunos / Como funciona. */
+:root{
+  --bg:#f2f5f4; --surface:#ffffff; --sunken:#e9efed; --ink:#14302b; --muted:#5b6f6a; --line:#d6e1de;
+  --accent:#0d7360; --accent-ink:#ffffff; --accent-soft:#d9eee8;
+  --ok:#1b7f45; --ok-soft:#dcf1e3; --warn:#9a5b00; --warn-soft:#fbeed6; --bad:#b0261d; --bad-soft:#fae2df; --info:#2c5aa8; --info-soft:#e1e9f8;
+  --shadow:0 1px 2px rgba(20,48,43,.06),0 6px 20px rgba(20,48,43,.07);
+  --f-display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
+  --f-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d1615; --surface:#14211f; --sunken:#101b19; --ink:#e2ede9; --muted:#93a7a2; --line:#253734;
+  --accent:#3ec29f; --accent-ink:#04211a; --accent-soft:#16392f;
+  --ok:#62d394; --ok-soft:#163525; --warn:#f0b14c; --warn-soft:#382a12; --bad:#ff8b80; --bad-soft:#3b1b19; --info:#93b2ff; --info-soft:#1b2740;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#0d1615; --surface:#14211f; --sunken:#101b19; --ink:#e2ede9; --muted:#93a7a2; --line:#253734;
+  --accent:#3ec29f; --accent-ink:#04211a; --accent-soft:#16392f;
+  --ok:#62d394; --ok-soft:#163525; --warn:#f0b14c; --warn-soft:#382a12; --bad:#ff8b80; --bad-soft:#3b1b19; --info:#93b2ff; --info-soft:#1b2740;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--f-mono);font-size:12px}
+.muted{color:var(--muted)}
+.label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+
+/* topo */
+.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px}
+.brand h1{font-size:28px;line-height:1.1}
+.brand p{margin:4px 0 0;color:var(--muted)}
+.demo{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:12px;padding:3px 9px;border-radius:999px;background:var(--warn-soft);color:var(--warn);font-weight:600}
+.months{display:flex;gap:4px;padding:4px;background:var(--sunken);border:1px solid var(--line);border-radius:12px;flex-wrap:wrap}
+.months button{border:0;background:transparent;padding:7px 12px;border-radius:9px;font-weight:600;color:var(--muted)}
+.months button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.months small{display:block;font-weight:500;font-size:10px;letter-spacing:.05em;text-transform:uppercase}
+
+/* resumo */
+.kpis{display:grid;grid-template-columns:1.6fr repeat(3,1fr);gap:12px;margin-top:20px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+.kpi .v{font-family:var(--f-display);font-size:26px;font-weight:700;margin-top:4px;line-height:1.1}
+.kpi .s{color:var(--muted);font-size:12.5px;margin-top:2px}
+.bar{height:8px;border-radius:99px;background:var(--sunken);margin-top:10px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.kpi.alert{border-color:var(--warn);background:var(--warn-soft)}
+.kpi.alert .v{color:var(--warn)}
+@media (max-width:820px){.kpis{grid-template-columns:1fr 1fr}.kpis .kpi:first-child{grid-column:1/-1}}
+
+/* abas */
+.tabs{display:flex;gap:4px;margin-top:24px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:0;background:none;padding:10px 14px;font-weight:600;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;display:inline-flex;gap:8px;align-items:center}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.count{font-size:11px;min-width:20px;padding:1px 6px;border-radius:99px;background:var(--sunken);color:var(--muted);text-align:center}
+.count.hot{background:var(--bad);color:#fff}
+.panel{margin-top:16px}
+
+/* botões */
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:10px;font-weight:600;display:inline-flex;gap:8px;align-items:center;justify-content:center}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.danger{color:var(--bad)}
+.btn.sm{padding:5px 10px;font-size:13px;border-radius:8px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.toolbar .grp{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);padding:5px 11px;border-radius:99px;font-size:13px;font-weight:500;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.search{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 12px;min-width:0;width:240px;max-width:100%}
+
+/* pills de status */
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st-pago{background:var(--ok-soft);color:var(--ok)}
+.st-atrasado{background:var(--bad-soft);color:var(--bad)}
+.st-avencer{background:var(--info-soft);color:var(--info)}
+.st-futuro{background:var(--sunken);color:var(--muted)}
+.st-lendo{background:var(--info-soft);color:var(--info)}
+.st-pendente{background:var(--warn-soft);color:var(--warn)}
+.st-aprovado{background:var(--ok-soft);color:var(--ok)}
+.st-rejeitado{background:var(--sunken);color:var(--muted)}
+
+/* comprovantes */
+.comps{display:grid;gap:12px}
+.comp{display:grid;grid-template-columns:132px 1fr;gap:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px}
+.comp.is-pendente{border-color:color-mix(in srgb,var(--warn) 55%,var(--line));box-shadow:var(--shadow)}
+.comp.is-aprovado,.comp.is-rejeitado{opacity:.86}
+.thumb{border:1px solid var(--line);padding:0;border-radius:10px;overflow:hidden;background:var(--sunken);aspect-ratio:3/4.4;max-width:100%;display:block;width:100%}
+.thumb img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.comp-body{min-width:0;display:flex;flex-direction:column;gap:10px}
+.comp-head{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between}
+.who{font-weight:600}
+.who small{font-weight:400;color:var(--muted);margin-left:6px}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px;margin:0}
+.fields div{min-width:0}
+.fields dt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.fields dd{margin:2px 0 0;font-weight:500;overflow-wrap:anywhere}
+.fields dd.big{font-family:var(--f-display);font-size:20px;font-weight:700}
+.ia{font-size:13px;background:var(--sunken);border-radius:10px;padding:8px 10px;display:flex;gap:8px;align-items:flex-start}
+.ia b{white-space:nowrap}
+.warns{display:grid;gap:6px}
+.warn{font-size:13px;color:var(--warn);background:var(--warn-soft);padding:6px 10px;border-radius:8px}
+.warn.bad{color:var(--bad);background:var(--bad-soft)}
+.decide{display:grid;gap:10px;border-top:1px dashed var(--line);padding-top:10px}
+.decide-row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.decide select{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 10px;max-width:100%;min-width:0}
+.mchk{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid var(--line);border-radius:99px;font-size:13px;cursor:pointer}
+.mchk:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.mchk input{accent-color:var(--accent);margin:0}
+.done{font-size:13px;color:var(--muted)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:sp .8s linear infinite;display:inline-block;vertical-align:-2px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+@media (max-width:560px){.comp{grid-template-columns:84px 1fr;gap:12px;padding:12px}.fields{grid-template-columns:1fr 1fr}}
+
+.empty{border:1px dashed var(--line);border-radius:14px;padding:28px;text-align:center;color:var(--muted)}
+
+/* alunos */
+.tablewrap{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--sunken);position:sticky;top:0}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td .nm{font-weight:600}
+td .sub{font-size:12.5px;color:var(--muted)}
+.mstrip{display:flex;gap:4px}
+.mcell{border:0;font-size:11.5px;font-weight:600;padding:3px 8px;border-radius:7px;min-width:40px;text-align:center}
+.mcell.sel{outline:2px solid var(--ink);outline-offset:1px}
+.right{text-align:right}
+.debt{color:var(--bad);font-weight:600}
+.acts{display:flex;gap:6px;justify-content:flex-end}
+
+/* como funciona */
+.how{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+.how section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}
+.how h2{font-size:19px;margin-bottom:10px}
+.how ol,.how ul{margin:0;padding-left:20px;display:grid;gap:8px}
+.how p{margin:0 0 10px;max-width:65ch}
+.how .wide{grid-column:1/-1}
+.flow{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;counter-reset:f}
+.flow div{background:var(--sunken);border-radius:12px;padding:12px;font-size:13px;position:relative}
+.flow b{display:block;font-family:var(--f-display);font-size:15px;margin-bottom:4px}
+.flow div::before{counter-increment:f;content:counter(f);position:absolute;top:10px;right:12px;font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+@media (max-width:860px){.how{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}}
+
+/* modal e toast */
+.overlay{position:fixed;inset:0;background:rgba(8,20,18,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal{background:var(--surface);color:var(--ink);border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.modal.img{max-width:560px;padding:10px}
+.modal h3{font-size:20px;margin-bottom:12px}
+.form{display:grid;gap:12px}
+.form label{display:grid;gap:4px;font-size:13px;font-weight:600}
+.form input,.form select,.form textarea{border:1px solid var(--line);background:var(--bg);border-radius:9px;padding:8px 10px;font-weight:400;width:100%}
+.form textarea{min-height:130px;resize:vertical;font-family:var(--f-body)}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:16px}
+.toasts{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:60;max-width:calc(100% - 32px)}
+.toast{background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow);font-weight:500;max-width:380px}
+.toast.new{background:var(--accent);color:var(--accent-ink)}
+.notice{margin-top:12px;font-size:13px;padding:8px 12px;border-radius:10px;background:var(--info-soft);color:var(--info)}
+footer{margin-top:28px;color:var(--muted);font-size:12px}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Mensalidades em Dia</h1>
+      <p>Comprovantes do WhatsApp conferidos e baixados num só lugar.</p>
+      <span class="demo" id="demoTag">Protótipo · dados de exemplo</span>
+    </div>
+    <nav class="months" id="months" aria-label="Competência"></nav>
+  </header>
+
+  <div class="kpis" id="kpis"></div>
+  <div class="notice" id="notice" hidden></div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-comprovantes" aria-selected="true" data-tab="comprovantes">Comprovantes <span class="count" id="cntComp">0</span></button>
+    <button role="tab" id="tab-alunos" aria-selected="false" data-tab="alunos">Alunos <span class="count" id="cntAlunos">0</span></button>
+    <button role="tab" id="tab-como" aria-selected="false" data-tab="como">Como vai funcionar</button>
+  </div>
+
+  <section class="panel" id="p-comprovantes">
+    <div class="toolbar">
+      <div class="chips" id="compFilter">
+        <button class="chip" aria-pressed="true" data-f="conferir">A conferir</button>
+        <button class="chip" aria-pressed="false" data-f="todos">Todos</button>
+      </div>
+      <div class="grp">
+        <label class="btn" for="upload">Enviar foto de comprovante</label>
+        <input type="file" id="upload" accept="image/*" hidden>
+        <button class="btn primary" id="simular">Simular comprovante chegando no WhatsApp</button>
+      </div>
+    </div>
+    <div class="comps" id="comps"><div class="empty">Carregando comprovantes…</div></div>
+  </section>
+
+  <section class="panel" id="p-alunos" hidden>
+    <div class="toolbar">
+      <div class="chips" id="alFilter">
+        <button class="chip" aria-pressed="true" data-f="todos">Todos</button>
+        <button class="chip" aria-pressed="false" data-f="pago">Pagos no mês</button>
+        <button class="chip" aria-pressed="false" data-f="aberto">Em aberto no mês</button>
+        <button class="chip" aria-pressed="false" data-f="devendo">Com atraso</button>
+      </div>
+      <input class="search" id="busca" type="search" placeholder="Buscar aluno ou responsável" aria-label="Buscar aluno ou responsável">
+    </div>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Aluno</th><th>Turma</th><th class="right">Mensalidade</th><th>Meses</th><th class="right">Em atraso</th><th class="right">Ações</th></tr></thead>
+      <tbody id="alunos"><tr><td colspan="6" class="muted">Carregando alunos…</td></tr></tbody>
+    </table></div>
+  </section>
+
+  <section class="panel" id="p-como" hidden>
+    <div class="how">
+      <section class="wide">
+        <h2>O caminho de um comprovante</h2>
+        <div class="flow">
+          <div><b>Responsável paga</b>Faz o Pix e manda o print no WhatsApp da escola, como já faz hoje.</div>
+          <div><b>Sistema recebe</b>O número da escola fica ligado ao sistema. Cada imagem ou PDF que chega é guardado.</div>
+          <div><b>IA lê</b>O Claude extrai pagador, valor, data e ID da transação e sugere o aluno e os meses.</div>
+          <div><b>Secretaria confere</b>Chega um alerta. Ela olha o comprovante e confirma com um toque.</div>
+          <div><b>Baixa e resposta</b>O mês fica pago na ficha do aluno e o responsável recebe "comprovante recebido".</div>
+        </div>
+      </section>
+      <section>
+        <h2>O que já funciona neste protótipo</h2>
+        <ul>
+          <li>Leitura automática de comprovantes por IA. Envie a foto de um comprovante real para testar.</li>
+          <li>Sugestão de aluno e de meses, com aviso quando o valor não bate ou o comprovante parece repetido.</li>
+          <li>Baixa com um toque e baixa manual para pagamentos em dinheiro ou cartão.</li>
+          <li>Painel do mês: quanto entrou, quem pagou, quem está em aberto e o total em atraso.</li>
+          <li>Mensagem de cobrança pronta para cada responsável.</li>
+          <li>Dados compartilhados: todos que abrem esta página veem as mesmas baixas, ao vivo.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Próximos passos da versão real</h2>
+        <ol>
+          <li><b>Ligar o WhatsApp da escola.</b> Pela API oficial do WhatsApp Business (Meta), que é a opção segura para não ter o número bloqueado.</li>
+          <li><b>Resposta automática</b> ao responsável quando o comprovante for conferido.</li>
+          <li><b>Lembretes de vencimento</b> enviados sozinhos alguns dias antes e depois do dia 10.</li>
+          <li><b>Pix identificado por aluno</b> pelo banco da escola. Aí a baixa acontece sozinha, sem precisar de comprovante.</li>
+          <li><b>Acesso com login</b> para a secretaria e a direção, e relatório mensal para imprimir.</li>
+        </ol>
+      </section>
+    </div>
+  </section>
+
+  <footer>Protótipo. Os alunos, responsáveis e valores são fictícios e servem só para demonstração.</footer>
+</div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+<div id="modalRoot"></div>
+
+<script>
+(() => {
+const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const MES_LONGO = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const INICIO = '2026-09';
+const hoje = new Date();
+const ym = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+const mesAtual = ym(hoje);
+const meses = (() => { const out = []; let [y, m] = INICIO.split('-').map(Number); const fim = mesAtual > INICIO ? mesAtual : INICIO; for (;;) { const k = y + '-' + String(m).padStart(2, '0'); out.push(k); if (k >= fim) break; m++; if (m > 12) { m = 1; y++; } } return out; })();
+const lblMes = k => MES[+k.slice(5) - 1];
+const lblMesLongo = k => MES_LONGO[+k.slice(5) - 1] + ' de ' + k.slice(0, 4);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const $ = s => document.querySelector(s);
+
+const S = { db: null, sample: null, alunos: new Map(), comps: [], loadedA: false, loadedC: false, mes: mesAtual,
+  compF: 'conferir', alF: 'todos', busca: '', tab: 'comprovantes', sel: {}, imgCache: {}, seen: new Set(), firstC: true };
+
+/* ---------- status ---------- */
+function statusMes(a, m) {
+  if (a.pagamentos && a.pagamentos[m]) return 'pago';
+  if (m < mesAtual) return 'atrasado';
+  if (m === mesAtual) return hoje.getDate() > (a.vencimento || 10) ? 'atrasado' : 'avencer';
+  return 'futuro';
+}
+const ST_LBL = { pago: 'Pago', atrasado: 'Atrasado', avencer: 'A vencer', futuro: '—' };
+const emAberto = a => meses.filter(m => m <= mesAtual && statusMes(a, m) !== 'pago');
+const atrasados = a => meses.filter(m => statusMes(a, m) === 'atrasado');
+const alunosOrd = () => [...S.alunos.entries()].map(([id, a]) => ({ id, ...a })).sort((x, y) => x.nome.localeCompare(y.nome, 'pt-BR'));
+
+/* ---------- topo ---------- */
+function renderMonths() {
+  $('#months').innerHTML = meses.map(m => `<button aria-pressed="${m === S.mes}" data-m="${m}"><small>${m.slice(0,4)}</small>${lblMes(m)}${m === mesAtual ? ' · atual' : ''}</button>`).join('');
+}
+$('#months').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (!b) return; S.mes = b.dataset.m; renderAll(); });
+
+function renderKpis() {
+  const al = alunosOrd(); const m = S.mes;
+  const previsto = al.reduce((s, a) => s + (a.valor || 0), 0);
+  const recebido = al.reduce((s, a) => s + (a.pagamentos?.[m]?.valor || 0), 0);
+  const pagos = al.filter(a => statusMes(a, m) === 'pago').length;
+  const abertos = al.filter(a => statusMes(a, m) !== 'pago');
+  const valorAberto = abertos.reduce((s, a) => s + (a.valor || 0), 0);
+  const atrasoTotal = al.reduce((s, a) => s + atrasados(a).length * (a.valor || 0), 0);
+  const devedores = al.filter(a => atrasados(a).length).length;
+  const conferir = S.comps.filter(c => c.status === 'pendente' || c.status === 'lendo').length;
+  const pct = previsto ? Math.min(100, recebido / previsto * 100) : 0;
+  $('#kpis').innerHTML = `
+    <div class="kpi"><div class="label">Recebido em ${esc(lblMesLongo(m))}</div>
+      <div class="v num">${BRL.format(recebido)}</div>
+      <div class="s num">de ${BRL.format(previsto)} previstos · ${pct.toFixed(0)}%</div>
+      <div class="bar" role="img" aria-label="${pct.toFixed(0)}% recebido"><i style="width:${pct}%;background:var(--ok)"></i></div></div>
+    <div class="kpi"><div class="label">Pagaram</div><div class="v num">${pagos}<span class="muted" style="font-size:16px"> / ${al.length}</span></div><div class="s">alunos neste mês</div></div>
+    <div class="kpi"><div class="label">Em aberto</div><div class="v num">${abertos.length}</div><div class="s num">${BRL.format(valorAberto)} a receber</div></div>
+    <div class="kpi ${conferir ? 'alert' : ''}"><div class="label">A conferir</div><div class="v num">${conferir}</div><div class="s num">${conferir ? 'comprovantes esperando você' : 'nenhum comprovante novo'} · atraso total ${BRL.format(atrasoTotal)} (${devedores} alunos)</div></div>`;
+  const cc = $('#cntComp'); cc.textContent = conferir; cc.classList.toggle('hot', conferir > 0);
+  $('#cntAlunos').textContent = al.length;
+  document.title = (conferir ? `(${conferir}) ` : '') + 'Mensalidades em Dia';
+}
+
+/* ---------- abas ---------- */
+document.querySelector('.tabs').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if (!b) return; S.tab = b.dataset.tab;
+  document.querySelectorAll('.tabs [data-tab]').forEach(x => x.setAttribute('aria-selected', x === b));
+  ['comprovantes', 'alunos', 'como'].forEach(t => $('#p-' + t).hidden = t !== S.tab);
+  try { localStorage.setItem('mdia-tab', S.tab); } catch {}
+});
+try { const t = localStorage.getItem('mdia-tab'); if (t) document.querySelector(`[data-tab="${t}"]`)?.click(); } catch {}
+
+/* ---------- comprovante desenhado (simulação) ---------- */
+function hashCor(s) { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return ['#1d3c6e', '#5b2a86', '#0f5e4f', '#8a2c2c', '#2b4a8a', '#3e3e3e'][h % 6]; }
+function desenharRecibo(d) {
+  const W = 540, H = 860, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
+  g.fillStyle = hashCor(d.banco); g.fillRect(0, 0, W, 118);
+  g.fillStyle = '#ffffff'; g.font = '700 24px Inter, Arial, sans-serif'; g.fillText(d.banco || 'Banco', 32, 54);
+  g.font = '400 15px Inter, Arial, sans-serif'; g.fillText('Comprovante de transferência', 32, 86);
+  g.fillStyle = '#5b6f6a'; g.font = '500 15px Inter, Arial, sans-serif'; g.fillText('Pix enviado', 32, 166);
+  g.fillStyle = '#14302b'; g.font = '700 42px Inter, Arial, sans-serif'; g.fillText(BRL.format(d.valor || 0), 32, 216);
+  g.fillStyle = '#5b6f6a'; g.font = '400 15px Inter, Arial, sans-serif'; g.fillText(d.dataHora || '', 32, 248);
+  let y = 290;
+  const sec = (titulo, linhas) => {
+    g.strokeStyle = '#e1e7e5'; g.lineWidth = 1; g.beginPath(); g.moveTo(32, y); g.lineTo(W - 32, y); g.stroke(); y += 34;
+    g.fillStyle = '#14302b'; g.font = '700 16px Inter, Arial, sans-serif'; g.fillText(titulo, 32, y); y += 12;
+    for (const [k, v] of linhas) { y += 30; g.fillStyle = '#7a8b87'; g.font = '400 14px Inter, Arial, sans-serif'; g.fillText(k, 32, y); g.fillStyle = '#14302b'; g.font = '500 14px Inter, Arial, sans-serif'; g.textAlign = 'right'; g.fillText(String(v), W - 32, y); g.textAlign = 'left'; }
+    y += 26;
+  };
+  sec('Destino', [['Nome', d.recebedor || 'Instituição de Ensino'], ['CNPJ', '00.000.000/0001-00'], ['Instituição', 'Banco da Escola S.A.'], ['Chave Pix', 'financeiro@escola.exemplo']]);
+  sec('Origem', [['Nome', d.pagador || ''], ['CPF', '•••.' + String(d.cpfMeio || '482.913') + '-••'], ['Instituição', d.banco || '']]);
+  g.strokeStyle = '#e1e7e5'; g.beginPath(); g.moveTo(32, y); g.lineTo(W - 32, y); g.stroke(); y += 34;
+  g.fillStyle = '#7a8b87'; g.font = '400 14px Inter, Arial, sans-serif'; g.fillText('ID da transação', 32, y); y += 24;
+  g.fillStyle = '#14302b'; g.font = '500 14px "JetBrains Mono", monospace'; g.fillText(d.idTransacao || '', 32, y);
+  y += 50; g.fillStyle = '#9aa9a5'; g.font = '400 12px Inter, Arial, sans-serif'; g.fillText('Imagem gerada para demonstração do protótipo.', 32, y);
+  return c;
+}
+const canvasBlob = (c, q = 0.82) => new Promise(r => c.toBlob(r, 'image/jpeg', q));
+function dataUrlBlob(u) { const [h, b] = u.split(','); const mime = (h.match(/data:([^;]+)/) || [])[1] || 'image/jpeg'; const bin = atob(b); const arr = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return new Blob([arr], { type: mime }); }
+function imgDe(c) {
+  if (c.imagem) return c.imagem;
+  if (!S.imgCache[c.id] && c.extraido) S.imgCache[c.id] = desenharRecibo(c.extraido).toDataURL('image/jpeg', 0.8);
+  return S.imgCache[c.id] || '';
+}
+
+/* ---------- leitura por IA ---------- */
+async function lerComprovante(id, blob, telefone) {
+  const ref = S.db.doc('comprovantes/' + id);
+  if (!S.sample) { await ref.update({ status: 'pendente', erroLeitura: 'A leitura automática não está disponível nesta visualização. Confira os dados pela imagem.' }); return; }
+  const lista = alunosOrd().map(a => ({ id: a.id, aluno: a.nome, responsavel: a.responsavel, telefone: a.telefone, turma: a.turma, mensalidade: a.valor, mesesEmAberto: emAberto(a) }));
+  const prompt = `Você confere comprovantes de pagamento de mensalidade de uma escola brasileira.
+A imagem anexada chegou pelo WhatsApp da escola, enviada pelo número: ${telefone || 'desconhecido'}.
+Hoje é ${hoje.toLocaleDateString('pt-BR')}. O vencimento é todo dia 10.
+
+1. Leia a imagem e extraia os dados do pagamento.
+2. Decida a qual aluno da lista ele se refere. Use nome do pagador (normalmente o responsável), telefone de quem enviou e valor. Se não tiver segurança, use confianca "baixa" e alunoId null.
+3. Sugira as competências (AAAA-MM) que o valor quita, começando pelos meses em aberto mais antigos do aluno.
+
+Alunos (JSON):
+${JSON.stringify(lista)}
+
+Responda SOMENTE com um objeto JSON, sem texto fora dele, neste formato:
+{"ehComprovante": true, "pagador": "nome de quem pagou", "valor": 0.00, "dataHora": "DD/MM/AAAA HH:MM", "banco": "instituição de origem", "idTransacao": "id/código de autenticação ou vazio", "recebedor": "nome de quem recebeu", "alunoId": "id da lista ou null", "confianca": "alta|media|baixa", "competencias": ["AAAA-MM"], "motivo": "uma frase curta em português explicando a sugestão"}
+Se a imagem não for um comprovante de pagamento, devolva ehComprovante false e explique em motivo.`;
+  try {
+    const r = await S.sample.json(prompt, { images: [blob], modelTier: 'default' });
+    const ex = { pagador: str(r.pagador), valor: Number(r.valor) || 0, dataHora: str(r.dataHora), banco: str(r.banco), idTransacao: str(r.idTransacao), recebedor: str(r.recebedor) };
+    const aid = r.alunoId && S.alunos.has(String(r.alunoId)) ? String(r.alunoId) : null;
+    const comps = Array.isArray(r.competencias) ? r.competencias.filter(m => meses.includes(m)) : [];
+    await ref.update({ status: 'pendente', extraido: ex, ehComprovante: r.ehComprovante !== false,
+      sugestao: { alunoId: aid, confianca: ['alta', 'media', 'baixa'].includes(r.confianca) ? r.confianca : 'baixa', competencias: comps, motivo: str(r.motivo) } });
+  } catch (e) {
+    const msg = e?.code === 'not_granted' ? 'Você não liberou a leitura pela IA. Confira os dados pela imagem.' : e?.code === 'rate_limited' ? 'Muitas leituras seguidas. Confira pela imagem ou tente de novo em instantes.' : 'Não consegui ler este comprovante automaticamente. Confira pela imagem.';
+    await ref.update({ status: 'pendente', erroLeitura: msg }).catch(() => {});
+  }
+}
+const str = v => (v == null ? '' : String(v)).slice(0, 200);
+
+async function novoComprovante({ imagem, blob, telefone, remetente, origem }) {
+  if (!S.db) return toast('O banco de dados ainda não conectou. Tente em alguns segundos.');
+  const ref = S.db.collection('comprovantes').doc();
+  await ref.set({ recebidoEm: Date.now(), telefone: telefone || '', remetente: remetente || '', imagem, status: 'lendo', origem, exemplo: origem === 'simulado' });
+  lerComprovante(ref.id, blob, telefone);
+}
+
+$('#simular').addEventListener('click', async () => {
+  const cands = alunosOrd().filter(a => emAberto(a).length);
+  if (!cands.length) return toast('Todos os alunos estão em dia. Nada para simular.');
+  const a = cands[Math.floor(Math.random() * cands.length)];
+  const ab = emAberto(a); const n = ab.length > 1 && Math.random() < 0.4 ? 2 : 1;
+  const bancos = ['Banco Horizonte', 'Banco Lumen Digital', 'Cooperativa Vale Sul', 'Banco Ipê', 'Conta Rio'];
+  const agora = new Date();
+  const d = { banco: bancos[Math.floor(Math.random() * bancos.length)], valor: a.valor * n, pagador: a.responsavel.toUpperCase(),
+    dataHora: agora.toLocaleDateString('pt-BR') + ' às ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+    recebedor: 'INSTITUICAO DE ENSINO EXEMPLO LTDA', cpfMeio: String(100 + Math.floor(Math.random() * 899)) + '.' + String(100 + Math.floor(Math.random() * 899)),
+    idTransacao: 'E' + Array.from({ length: 31 }, () => '0123456789ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.floor(Math.random() * 34)]).join('') };
+  const c = desenharRecibo(d); const blob = await canvasBlob(c);
+  await novoComprovante({ imagem: c.toDataURL('image/jpeg', 0.8), blob, telefone: a.telefone, remetente: a.responsavel, origem: 'simulado' });
+});
+
+$('#upload').addEventListener('change', async e => {
+  const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
+  if (!f.type.startsWith('image/')) return toast('Envie uma imagem (foto ou print). PDF entra na versão real.');
+  const url = URL.createObjectURL(f); const img = new Image();
+  img.onload = async () => {
+    URL.revokeObjectURL(url);
+    const max = 1000, k = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+    let q = 0.8, du = c.toDataURL('image/jpeg', q); while (du.length > 190000 && q > 0.35) { q -= 0.1; du = c.toDataURL('image/jpeg', q); }
+    const blob = dataUrlBlob(du);
+    await novoComprovante({ imagem: du, blob, telefone: '', remetente: 'Enviado pela secretaria', origem: 'upload' });
+    toast('Comprovante enviado. Lendo…');
+  };
+  img.onerror = () => toast('Não consegui abrir essa imagem. Tente um print em JPG ou PNG.');
+  img.src = url;
+});
+
+/* ---------- lista de comprovantes ---------- */
+function tempo(ms) {
+  const d = new Date(ms), diff = (Date.now() - ms) / 60000;
+  if (diff < 1) return 'agora'; if (diff < 60) return `há ${Math.round(diff)} min`;
+  const hh = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  if (d.toDateString() === hoje.toDateString()) return 'hoje ' + hh;
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) + ' ' + hh;
+}
+function selDe(c) {
+  if (!S.sel[c.id]) { const sg = c.sugestao || {}; S.sel[c.id] = { alunoId: sg.alunoId || '', meses: new Set(sg.competencias || []) }; }
+  return S.sel[c.id];
+}
+function renderComps() {
+  const box = $('#comps');
+  if (!S.loadedC) return;
+  let list = S.comps.slice().sort((a, b) => (ordem(a) - ordem(b)) || (b.recebidoEm - a.recebidoEm));
+  if (S.compF === 'conferir') list = list.filter(c => c.status === 'pendente' || c.status === 'lendo');
+  if (!list.length) { box.innerHTML = `<div class="empty">${S.compF === 'conferir' ? 'Nenhum comprovante esperando conferência. Toque em <b>Simular comprovante chegando no WhatsApp</b> ou envie a foto de um comprovante.' : 'Nenhum comprovante recebido ainda.'}</div>`; return; }
+  box.innerHTML = list.map(cardHtml).join('');
+}
+const ordem = c => ({ lendo: 0, pendente: 0, aprovado: 1, rejeitado: 2 }[c.status] ?? 1);
+function cardHtml(c) {
+  const ex = c.extraido || {}; const sg = c.sugestao || {};
+  const stl = { lendo: 'Lendo…', pendente: 'A conferir', aprovado: 'Baixa dada', rejeitado: 'Rejeitado' }[c.status] || c.status;
+  const head = `<div class="comp-head"><div class="who">${esc(c.remetente || 'Número desconhecido')}<small>${esc(c.telefone || '')} · ${esc(tempo(c.recebidoEm))}${c.origem === 'simulado' ? ' · simulado' : ''}</small></div><span class="pill st-${esc(c.status)}">${esc(stl)}</span></div>`;
+  let body = '';
+  if (c.status === 'lendo') body = `<div class="ia"><span class="spin" aria-hidden="true"></span><span>O Claude está lendo o comprovante e procurando o aluno…</span></div>`;
+  else {
+    if (c.extraido) body += `<dl class="fields">
+      <div><dt>Valor</dt><dd class="big num">${BRL.format(ex.valor || 0)}</dd></div>
+      <div><dt>Pagador</dt><dd>${esc(ex.pagador || '—')}</dd></div>
+      <div><dt>Data</dt><dd>${esc(ex.dataHora || '—')}</dd></div>
+      <div><dt>Banco</dt><dd>${esc(ex.banco || '—')}</dd></div>
+      <div style="grid-column:span 2"><dt>ID da transação</dt><dd class="mono">${esc(ex.idTransacao || '—')}</dd></div></dl>`;
+    if (sg.motivo && c.status === 'pendente') body += `<div class="ia"><b>Sugestão da IA</b><span>${esc(sg.motivo)} <span class="muted">(confiança ${esc(sg.confianca || 'baixa')})</span></span></div>`;
+    const w = avisos(c); if (w.length) body += `<div class="warns">${w.map(x => `<div class="warn ${x.bad ? 'bad' : ''}">${esc(x.t)}</div>`).join('')}</div>`;
+    if (c.status === 'pendente') body += decideHtml(c);
+    if (c.status === 'aprovado') { const a = S.alunos.get(c.alunoId); body += `<div class="done">Baixa em <b>${esc(a?.nome || 'aluno removido')}</b> · ${(c.competencias || []).map(lblMesLongo).map(esc).join(', ')}. <button class="btn sm" data-act="reabrir" data-id="${c.id}">Desfazer</button></div>`; }
+    if (c.status === 'rejeitado') body += `<div class="done">Rejeitado. <button class="btn sm" data-act="reabrir" data-id="${c.id}">Voltar para conferência</button></div>`;
+  }
+  return `<article class="comp is-${esc(c.status)}"><button class="thumb" data-act="ver" data-id="${c.id}" aria-label="Ver comprovante inteiro"><img alt="Comprovante" src="${esc(imgDe(c))}"></button><div class="comp-body">${head}${body}</div></article>`;
+}
+function avisos(c) {
+  const out = []; const ex = c.extraido || {};
+  if (c.erroLeitura) out.push({ t: c.erroLeitura });
+  if (c.ehComprovante === false) out.push({ t: 'A IA acha que esta imagem não é um comprovante de pagamento.', bad: true });
+  if (ex.idTransacao) { const dup = S.comps.find(o => o.id !== c.id && o.status !== 'rejeitado' && o.extraido?.idTransacao && o.extraido.idTransacao === ex.idTransacao); if (dup) out.push({ t: `Mesmo ID de transação de outro comprovante (${dup.remetente || 'sem nome'}, ${tempo(dup.recebidoEm)}). Pode ser repetido.`, bad: true }); }
+  if (c.status === 'pendente') {
+    const s = selDe(c); const a = S.alunos.get(s.alunoId);
+    if (a && s.meses.size && ex.valor) { const esp = a.valor * s.meses.size; if (Math.abs(esp - ex.valor) > 0.009) out.push({ t: `Valor diferente do esperado: ${BRL.format(ex.valor)} pago, ${BRL.format(esp)} para ${s.meses.size} ${s.meses.size > 1 ? 'meses' : 'mês'}.` }); }
+    if (a) { const ja = [...s.meses].filter(m => a.pagamentos?.[m]); if (ja.length) out.push({ t: `${a.nome} já tem ${ja.map(lblMes).join(', ')} pago.`, bad: true }); }
+  }
+  return out;
+}
+function decideHtml(c) {
+  const s = selDe(c); const a = S.alunos.get(s.alunoId);
+  const opts = alunosOrd().map(x => `<option value="${x.id}" ${x.id === s.alunoId ? 'selected' : ''}>${esc(x.nome)} · resp. ${esc(x.responsavel)}</option>`).join('');
+  const ms = a ? meses.concat(nextMes(meses[meses.length - 1])).map(m => { const pago = !!a.pagamentos?.[m]; return `<label class="mchk"><input type="checkbox" data-act="mes" data-id="${c.id}" value="${m}" ${s.meses.has(m) ? 'checked' : ''} ${pago ? 'disabled' : ''}>${lblMes(m)}/${m.slice(2, 4)}${pago ? ' ✓' : ''}</label>`; }).join('') : '<span class="muted">Escolha o aluno para ver os meses.</span>';
+  const ok = a && s.meses.size;
+  return `<div class="decide">
+    <div class="decide-row"><select data-act="aluno" data-id="${c.id}" aria-label="Aluno"><option value="">Escolha o aluno…</option>${opts}</select></div>
+    <div class="decide-row">${ms}</div>
+    <div class="decide-row"><button class="btn primary" data-act="confirmar" data-id="${c.id}" ${ok ? '' : 'disabled'}>Confirmar baixa</button><button class="btn danger" data-act="rejeitar" data-id="${c.id}">Rejeitar</button></div></div>`;
+}
+const nextMes = k => { let [y, m] = k.split('-').map(Number); m++; if (m > 12) { m = 1; y++; } return y + '-' + String(m).padStart(2, '0'); };
+
+$('#compFilter').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; S.compF = b.dataset.f; document.querySelectorAll('#compFilter .chip').forEach(x => x.setAttribute('aria-pressed', x === b)); renderComps(); });
+$('#comps').addEventListener('change', e => {
+  const t = e.target; const id = t.dataset.id; if (!id) return; const c = S.comps.find(x => x.id === id); if (!c) return; const s = selDe(c);
+  if (t.dataset.act === 'aluno') { s.alunoId = t.value; const a = S.alunos.get(t.value); s.meses = new Set(); if (a) { const ab = emAberto(a); const n = c.extraido?.valor && a.valor ? Math.max(1, Math.round(c.extraido.valor / a.valor)) : 1; ab.slice(0, n).forEach(m => s.meses.add(m)); } }
+  if (t.dataset.act === 'mes') t.checked ? s.meses.add(t.value) : s.meses.delete(t.value);
+  renderComps();
+});
+$('#comps').addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b || b.tagName === 'SELECT' || b.tagName === 'INPUT') return;
+  const c = S.comps.find(x => x.id === b.dataset.id); if (!c) return;
+  if (b.dataset.act === 'ver') return abrirImagem(imgDe(c));
+  if (b.dataset.act === 'confirmar') return confirmar(c, b);
+  if (b.dataset.act === 'rejeitar') { b.disabled = true; await S.db.doc('comprovantes/' + c.id).update({ status: 'rejeitado', conferidoEm: Date.now() }).catch(falha); return; }
+  if (b.dataset.act === 'reabrir') return reabrir(c, b);
+});
+async function confirmar(c, b) {
+  const s = selDe(c); const a = S.alunos.get(s.alunoId); if (!a || !s.meses.size) return;
+  b.disabled = true;
+  const ms = [...s.meses].sort(); const pag = {};
+  const valorMes = ms.length === 1 && c.extraido?.valor ? c.extraido.valor : a.valor;
+  ms.forEach(m => pag[m] = { valor: valorMes, data: c.extraido?.dataHora || hoje.toLocaleDateString('pt-BR'), via: 'Pix', comprovanteId: c.id, em: Date.now() });
+  try {
+    await S.db.doc('alunos/' + s.alunoId).update({ pagamentos: pag });
+    await S.db.doc('comprovantes/' + c.id).update({ status: 'aprovado', alunoId: s.alunoId, competencias: ms, conferidoEm: Date.now() });
+    toast(`Baixa registrada: ${a.nome} · ${ms.map(lblMes).join(', ')}`);
+  } catch (err) { falha(err); b.disabled = false; }
+}
+async function reabrir(c, b) {
+  b.disabled = true;
+  try {
+    if (c.status === 'aprovado' && c.alunoId) await removerPagamentos(c.alunoId, m => m.comprovanteId === c.id);
+    await S.db.doc('comprovantes/' + c.id).update({ status: 'pendente' });
+    delete S.sel[c.id];
+  } catch (err) { falha(err); b.disabled = false; }
+}
+async function removerPagamentos(alunoId, pred) {
+  const ref = S.db.doc('alunos/' + alunoId); const snap = await ref.get(); if (!snap.exists) return;
+  const d = structuredClone(snap.data()); const p = d.pagamentos || {};
+  for (const k of Object.keys(p)) if (pred(p[k], k)) delete p[k];
+  d.pagamentos = p; await ref.set(d);
+}
+
+/* ---------- alunos ---------- */
+function renderAlunos() {
+  if (!S.loadedA) return;
+  const m = S.mes; const q = S.busca.trim().toLowerCase();
+  let al = alunosOrd();
+  if (q) al = al.filter(a => (a.nome + ' ' + a.responsavel).toLowerCase().includes(q));
+  if (S.alF === 'pago') al = al.filter(a => statusMes(a, m) === 'pago');
+  if (S.alF === 'aberto') al = al.filter(a => statusMes(a, m) !== 'pago');
+  if (S.alF === 'devendo') al = al.filter(a => atrasados(a).length);
+  if (!S.alunos.size) { $('#alunos').innerHTML = `<tr><td colspan="6"><div class="empty">Nenhum aluno cadastrado ainda.</div></td></tr>`; return; }
+  if (!al.length) { $('#alunos').innerHTML = `<tr><td colspan="6" class="muted">Nenhum aluno neste filtro.</td></tr>`; return; }
+  $('#alunos').innerHTML = al.map(a => {
+    const atr = atrasados(a); const div = atr.length * a.valor;
+    const cells = meses.map(k => { const st = statusMes(a, k); return `<button class="mcell st-${st} ${k === m ? 'sel' : ''}" data-act="mes" data-id="${a.id}" data-m="${k}" title="${esc(lblMesLongo(k))}: ${ST_LBL[st]}">${lblMes(k)}</button>`; }).join('');
+    return `<tr><td><div class="nm">${esc(a.nome)}</div><div class="sub">Resp.: ${esc(a.responsavel)} · ${esc(a.telefone)}</div></td>
+      <td>${esc(a.turma)}</td><td class="right num">${BRL.format(a.valor)}</td><td><div class="mstrip">${cells}</div></td>
+      <td class="right num">${div ? `<span class="debt">${BRL.format(div)}</span>` : '<span class="muted">—</span>'}</td>
+      <td><div class="acts"><button class="btn sm" data-act="baixa" data-id="${a.id}">Dar baixa</button>${emAberto(a).length ? `<button class="btn sm" data-act="cobrar" data-id="${a.id}">Cobrar</button>` : ''}</div></td></tr>`;
+  }).join('');
+}
+$('#alFilter').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; S.alF = b.dataset.f; document.querySelectorAll('#alFilter .chip').forEach(x => x.setAttribute('aria-pressed', x === b)); renderAlunos(); });
+$('#busca').addEventListener('input', e => { S.busca = e.target.value; renderAlunos(); });
+$('#alunos').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return; const a = S.alunos.get(b.dataset.id); if (!a) return; const id = b.dataset.id;
+  if (b.dataset.act === 'baixa') modalBaixa(id, emAberto(a)[0] || S.mes);
+  if (b.dataset.act === 'cobrar') modalCobrar(id);
+  if (b.dataset.act === 'mes') { const m = b.dataset.m; a.pagamentos?.[m] ? modalPago(id, m) : modalBaixa(id, m); }
+});
+
+/* ---------- modais ---------- */
+function modal(html, cls = '') {
+  const root = $('#modalRoot'); root.innerHTML = `<div class="overlay" data-close><div class="modal ${cls}" role="dialog" aria-modal="true">${html}</div></div>`;
+  const ov = root.firstElementChild; ov.addEventListener('click', e => { if (e.target === ov || e.target.closest('[data-x]')) fechar(); });
+  setTimeout(() => ov.querySelector('input,select,button')?.focus(), 0); return ov;
+}
+const fechar = () => { $('#modalRoot').innerHTML = ''; };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fechar(); });
+function abrirImagem(src) { modal(`<img src="${esc(src)}" alt="Comprovante ampliado" style="width:100%;border-radius:10px;display:block"><div class="modal-actions"><button class="btn" data-x>Fechar</button></div>`, 'img'); }
+function modalBaixa(id, m) {
+  const a = S.alunos.get(id);
+  const opts = meses.concat(nextMes(meses[meses.length - 1])).filter(k => !a.pagamentos?.[k]).map(k => `<option value="${k}" ${k === m ? 'selected' : ''}>${lblMesLongo(k)}</option>`).join('');
+  const ov = modal(`<h3>Dar baixa · ${esc(a.nome)}</h3><form class="form" id="fBaixa">
+    <label>Mês de referência<select id="bMes">${opts}</select></label>
+    <label>Valor pago<input id="bValor" type="number" step="0.01" min="0" value="${a.valor}"></label>
+    <label>Forma de pagamento<select id="bVia"><option>Pix</option><option>Dinheiro</option><option>Cartão</option><option>Boleto</option></select></label>
+    <label>Data do pagamento<input id="bData" type="date" value="${hoje.toISOString().slice(0, 10)}"></label>
+    <div class="modal-actions"><button type="button" class="btn" data-x>Cancelar</button><button class="btn primary">Registrar pagamento</button></div></form>`);
+  ov.querySelector('#fBaixa').addEventListener('submit', async e => {
+    e.preventDefault(); const mm = ov.querySelector('#bMes').value; if (!mm) return;
+    const d = ov.querySelector('#bData').value.split('-').reverse().join('/');
+    try { await S.db.doc('alunos/' + id).update({ pagamentos: { [mm]: { valor: Number(ov.querySelector('#bValor').value) || a.valor, data: d, via: ov.querySelector('#bVia').value, em: Date.now() } } }); fechar(); toast(`Baixa registrada: ${a.nome} · ${lblMes(mm)}`); } catch (err) { falha(err); }
+  });
+}
+function modalPago(id, m) {
+  const a = S.alunos.get(id); const p = a.pagamentos[m];
+  const ov = modal(`<h3>${esc(a.nome)} · ${esc(lblMesLongo(m))}</h3>
+    <dl class="fields"><div><dt>Valor</dt><dd class="big num">${BRL.format(p.valor || 0)}</dd></div><div><dt>Pago em</dt><dd>${esc(p.data || '—')}</dd></div><div><dt>Forma</dt><dd>${esc(p.via || '—')}</dd></div><div><dt>Origem</dt><dd>${p.comprovanteId ? 'Comprovante do WhatsApp' : 'Baixa manual'}</dd></div></dl>
+    <div class="modal-actions"><button class="btn danger" id="desf">Desfazer baixa</button>${p.comprovanteId ? '<button class="btn" id="verc">Ver comprovante</button>' : ''}<button class="btn" data-x>Fechar</button></div>`);
+  ov.querySelector('#desf').addEventListener('click', async () => {
+    try { await removerPagamentos(id, (_, k) => k === m); if (p.comprovanteId) { const c = S.comps.find(x => x.id === p.comprovanteId); const resto = (c?.competencias || []).filter(k => k !== m); if (c) await S.db.doc('comprovantes/' + c.id).update(resto.length ? { competencias: resto } : { status: 'pendente' }); } fechar(); toast('Baixa desfeita.'); } catch (err) { falha(err); }
+  });
+  ov.querySelector('#verc')?.addEventListener('click', () => { const c = S.comps.find(x => x.id === p.comprovanteId); c ? abrirImagem(imgDe(c)) : toast('Comprovante não encontrado.'); });
+}
+function modalCobrar(id) {
+  const a = S.alunos.get(id); const ab = emAberto(a); const total = ab.length * a.valor;
+  const primeiro = a.responsavel.split(' ')[0];
+  const msg = `Olá, ${primeiro}! Tudo bem? Aqui é da secretaria da escola.\n\nConsta em aberto a mensalidade de ${a.nome} referente a ${ab.map(lblMesLongo).join(', ')}, no total de ${BRL.format(total)}.\n\nSe você já pagou, é só mandar o comprovante por aqui que a gente dá baixa. Qualquer dúvida, estamos à disposição. Obrigado!`;
+  const tel = '55' + String(a.telefone).replace(/\D/g, '');
+  const ov = modal(`<h3>Cobrar ${esc(a.responsavel)}</h3><div class="form">
+    <label>Mensagem<textarea id="cMsg">${esc(msg)}</textarea></label>
+    <div class="muted" style="font-size:13px">WhatsApp do responsável: <span class="mono">${esc(a.telefone)}</span>. Na versão real esta mensagem sai direto pelo número da escola.</div></div>
+    <div class="modal-actions"><button class="btn" data-x>Fechar</button><a class="btn" id="cWa" target="_blank" rel="noopener" href="#">Abrir no WhatsApp</a><button class="btn primary" id="cCopy">Copiar mensagem</button></div>`);
+  const upd = () => ov.querySelector('#cWa').href = `https://wa.me/${tel}?text=${encodeURIComponent(ov.querySelector('#cMsg').value)}`; upd();
+  ov.querySelector('#cMsg').addEventListener('input', upd);
+  ov.querySelector('#cCopy').addEventListener('click', () => { const t = ov.querySelector('#cMsg'); navigator.clipboard.writeText(t.value).then(() => toast('Mensagem copiada.'), () => { t.select(); toast('Selecionei o texto. Use Ctrl+C para copiar.'); }); });
+}
+
+/* ---------- avisos ---------- */
+function toast(t, cls = '') { const el = document.createElement('div'); el.className = 'toast ' + cls; el.textContent = t; $('#toasts').append(el); setTimeout(() => el.remove(), 4500); }
+function falha(err) { const c = err?.code; toast(c === 'invalid_argument' ? 'Você não tem permissão para alterar estes dados.' : c === 'quota_exceeded' ? 'O espaço do protótipo acabou. Rejeite e apague comprovantes antigos.' : 'Não consegui salvar. Verifique a conexão e tente de novo.'); }
+let audio; document.addEventListener('pointerdown', () => { try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); } catch {} }, { once: true });
+function plim() { if (!audio) return; try { const o = audio.createOscillator(), g = audio.createGain(); o.frequency.value = 880; g.gain.setValueAtTime(.12, audio.currentTime); g.gain.exponentialRampToValueAtTime(.001, audio.currentTime + .4); o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + .4); } catch {} }
+function notice(t) { const n = $('#notice'); n.hidden = !t; n.textContent = t || ''; }
+
+function renderAll() { renderMonths(); renderKpis(); renderComps(); renderAlunos(); }
+
+/* ---------- conexão ---------- */
+renderAll();
+const timer = setTimeout(() => { if (!S.loadedA || !S.loadedC) notice('Ainda não consegui carregar os dados. Verifique a conexão; a página tenta de novo sozinha.'); }, 10000);
+(async () => {
+  const db = await claude.use('db');
+  if (!db) { clearTimeout(timer); notice('Abra esta página pelo Claude, logado, para ver e salvar os dados.'); $('#comps').innerHTML = '<div class="empty">Dados indisponíveis nesta visualização.</div>'; $('#alunos').innerHTML = '<tr><td colspan="6" class="muted">Dados indisponíveis nesta visualização.</td></tr>'; return; }
+  S.db = db;
+  const pronto = () => { if (S.loadedA && S.loadedC) { clearTimeout(timer); notice(''); } };
+  db.collection('alunos').onSnapshot(snap => {
+    S.alunos = new Map(snap.docs.map(d => [d.id, d.data()]));
+    if (!snap.metadata.fromCache) { S.loadedA = true; pronto(); }
+    S.loadedA = S.loadedA || snap.size > 0;
+    $('#demoTag').hidden = ![...S.alunos.values()].some(a => a.exemplo);
+    renderAll();
+  }, () => { clearTimeout(timer); notice('A conexão com os dados caiu. Recarregue a página.'); });
+  db.collection('comprovantes').orderBy('recebidoEm', 'desc').limit(300).onSnapshot(snap => {
+    S.comps = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!S.firstC) for (const ch of snap.docChanges()) if (ch.type === 'added' && !S.seen.has(ch.doc.id)) { const c = ch.doc.data(); toast(`Novo comprovante no WhatsApp: ${c.remetente || 'número desconhecido'}`, 'new'); plim(); }
+    snap.docs.forEach(d => S.seen.add(d.id));
+    if (!snap.metadata.fromCache) { S.loadedC = true; S.firstC = false; pronto(); }
+    S.loadedC = S.loadedC || snap.size > 0; if (snap.size) S.firstC = false;
+    renderKpis(); renderComps();
+  }, () => { clearTimeout(timer); notice('A conexão com os dados caiu. Recarregue a página.'); });
+})();
+(async () => { S.sample = await claude.use('sample'); })();
+})();
+</script>

@@ -1,0 +1,12 @@
+{
+  "name": "mensalidades-em-dia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Controle de mensalidades com comprovantes recebidos pelo WhatsApp",
+  "type": "module",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js"
+  }
+}
