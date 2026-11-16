@@ -84,7 +84,7 @@ sudo apt-get update && sudo apt-get install -y git
 ```
 
 ```bash
-git clone https://github.com/SEU-USUARIO/mensalidades.git
+git clone https://github.com/Kairo1Rodrigues/mensalidades.git
 ```
 
 ```bash
