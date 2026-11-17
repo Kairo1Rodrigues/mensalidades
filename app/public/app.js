@@ -637,18 +637,21 @@ async function verWhatsapp() {
     return; }
   if (st === 'nao-configurado' || st === 'fora-do-ar') { card.innerHTML = `<h2>Conexão</h2><p class="warn bad">${st === 'nao-configurado' ? 'A Evolution API não está configurada no servidor (.env).' : 'O serviço do WhatsApp ainda não respondeu. Se o computador acabou de ligar, espere 1 ou 2 minutos e abra esta aba de novo. Se continuar, veja "Problemas comuns" no guia.'}</p>`; return; }
   card.innerHTML = `<h2>Conexão</h2><p class="muted">O WhatsApp da escola ainda não está ligado ao sistema.</p><div class="modal-actions" style="justify-content:flex-start"><button class="btn primary" id="waQr">Gerar QR Code</button></div><div id="qrBox"></div>`;
-  card.querySelector('#waQr').addEventListener('click', gerarQr);
+  card.querySelector('#waQr').addEventListener('click', () => gerarQr(false));
 }
-async function gerarQr() {
-  const box = $('#qrBox'); box.innerHTML = '<p class="muted"><span class="spin"></span> Gerando QR Code…</p>';
+// renovar = atualização automática do QR: nunca abre conexão nova (só lê o QR enquanto espera o escaneamento)
+async function gerarQr(renovar = false) {
+  const box = $('#qrBox'); if (!box) return;
+  if (!renovar) box.innerHTML = '<p class="muted"><span class="spin"></span> Gerando QR Code…</p>';
   try {
-    const r = await api('POST', '/api/whatsapp/conectar');
-    if (r.estado === 'open') return verWhatsapp();
+    const r = await api('POST', '/api/whatsapp/conectar', { renovar });
+    if (r.estado === 'open') { clearInterval(qrTimer); return verWhatsapp(); }
+    if (renovar && !r.qr) { clearInterval(qrTimer); return verWhatsapp(); } // não está mais esperando QR: volta ao botão
     box.innerHTML = r.qr ? `<div class="qr"><img src="${esc(r.qr)}" alt="QR Code para conectar o WhatsApp"></div><p class="hint">O QR Code se renova sozinho a cada 30 segundos enquanto esta tela estiver aberta.</p>` : '<p class="warn">O WhatsApp ainda não gerou o QR Code. Toque em Gerar QR Code de novo em alguns segundos. Se continuar assim, veja "Problemas comuns" no guia.</p>';
     clearInterval(qrTimer); let n = 0;
     qrTimer = setInterval(async () => {
       if ((await atualizarWa()) === 'open') { clearInterval(qrTimer); toast('WhatsApp conectado!'); return verWhatsapp(); }
-      if (++n % 10 === 0 && !$('#p-whatsapp').hidden) { clearInterval(qrTimer); gerarQr(); } // novo QR a cada ~30 s
+      if (++n % 10 === 0 && !$('#p-whatsapp').hidden) { clearInterval(qrTimer); gerarQr(true); } // novo QR a cada ~30 s
       if (n > 100) clearInterval(qrTimer);
     }, 3000);
   } catch (err) { box.innerHTML = `<p class="warn bad">${esc(err.message)}</p>`; }

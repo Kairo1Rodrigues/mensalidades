@@ -37,16 +37,37 @@ export function criarEvolution({ url, apiKey, instancia, webhookUrl }) {
       });
     },
 
-    /** Devolve o QR Code (data URL) para escanear com o celular da escola. */
-    async conectar() {
-      await this.garantirInstancia();
-      // logo depois de criar, a Evolution leva alguns segundos para gerar o QR ({count: 0})
-      for (let i = 0; i < 12; i++) {
+    /**
+     * Devolve o QR Code (data URL) para escanear com o celular da escola.
+     * Cuidado: na Evolution, /instance/connect com o estado "close" abre uma conexão NOVA sem fechar
+     * a anterior. Chamado várias vezes (ou enquanto a Evolution já reconecta sozinha, como logo depois
+     * de escanear o QR), deixa duas conexões da mesma sessão se derrubando sem parar
+     * ("conflict: replaced"). Por isso pedimos a conexão no máximo uma vez e, depois, só lemos o QR
+     * enquanto o estado é "connecting" (aí /instance/connect apenas devolve o QR atual).
+     * Com renovar = true (atualização automática da tela), nunca abre conexão nova.
+     */
+    async conectar({ renovar = false } = {}) {
+      const espera = ms => new Promise(ok => setTimeout(ok, ms));
+      const lerQr = async () => {
         const r = await chamar('GET', `/instance/connect/${instancia}`);
-        const qr = r?.base64 || r?.qrcode?.base64;
-        const estado = r?.instance?.state || null;
-        if (qr || estado === 'open') return { qr: qr || null, codigo: r?.pairingCode || null, estado };
-        await new Promise(ok => setTimeout(ok, 1500));
+        return { qr: r?.base64 || r?.qrcode?.base64 || null, codigo: r?.pairingCode || r?.qrcode?.pairingCode || null };
+      };
+      if (!renovar) await this.garantirInstancia();
+      let estado = await this.estado();
+      if (estado === 'open') return { qr: null, codigo: null, estado };
+      if (estado !== 'connecting') {
+        if (renovar) return { qr: null, codigo: null, estado };
+        await espera(3000); // pode ser a Evolution reconectando sozinha: dá tempo antes de decidir
+        estado = await this.estado();
+        if (estado === 'open') return { qr: null, codigo: null, estado };
+        if (estado !== 'connecting') { await lerQr(); estado = 'connecting'; } // única chamada que abre conexão
+      }
+      // logo depois de conectar, a Evolution leva alguns segundos para gerar o QR ({count: 0})
+      for (let i = 0; i < 12; i++) {
+        estado = await this.estado();
+        if (estado === 'open') return { qr: null, codigo: null, estado };
+        if (estado === 'connecting') { const q = await lerQr(); if (q.qr) return { ...q, estado }; }
+        await espera(1500);
       }
       return { qr: null, codigo: null, estado: await this.estado() };
     },

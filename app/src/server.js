@@ -163,7 +163,12 @@ async function receberWebhook(corpo) {
   if (evento === 'connection.update') {
     avisar('whatsapp', { estado: corpo?.data?.state });
     // acabou de conectar (ex.: computador ligado na segunda): procura o que chegou na semana
-    if (corpo?.data?.state === 'open') setTimeout(() => varrerComprovantes(7).catch(e => console.error('[varredura]', e.message)), 30_000).unref();
+    if (corpo?.data?.state === 'open' && !receberWebhook.agendada) {
+      receberWebhook.agendada = setTimeout(() => {
+        receberWebhook.agendada = null;
+        varrerComprovantes(7).catch(e => console.error('[varredura]', e.message));
+      }, 30_000).unref();
+    }
     return;
   }
   if (evento !== 'messages.upsert') return;
@@ -463,9 +468,15 @@ rota('GET', /^\/api\/whatsapp$/, async (req, res) => {
   if (!wa.configurada) return json(res, 200, { estado: 'nao-configurado' });
   try { json(res, 200, { estado: await wa.estado() }); } catch (e) { json(res, 200, { estado: 'fora-do-ar', detalhe: e.message }); }
 });
+// uma conexão por vez: dois pedidos juntos criariam conexões duplicadas na Evolution
+let conectando = null;
 rota('POST', /^\/api\/whatsapp\/conectar$/, async (req, res) => {
   if (!wa.configurada) return erro(res, 400, 'A Evolution API não está configurada no .env.');
-  try { json(res, 200, await wa.conectar()); } catch (e) { erro(res, 502, 'Não consegui falar com a Evolution API: ' + e.message); }
+  const { renovar = false } = await corpoJson(req, 1000);
+  try {
+    conectando ||= wa.conectar({ renovar: !!renovar }).finally(() => { conectando = null; });
+    json(res, 200, await conectando);
+  } catch (e) { erro(res, 502, 'Não consegui falar com a Evolution API: ' + e.message); }
 });
 rota('POST', /^\/api\/whatsapp\/desconectar$/, async (req, res) => {
   try { await wa.desconectar(); json(res, 200, { ok: true }); } catch (e) { erro(res, 502, e.message); }
